@@ -14,9 +14,13 @@ const port = process.env.PORT || 4000;
 // Connect to Database
 connectDB();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim().replace(/\/$/, ''))
-    : ['http://localhost:5173']
+const allowedOrigins = [
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/$/, '')) : []),
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174'
+].filter(Boolean);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
