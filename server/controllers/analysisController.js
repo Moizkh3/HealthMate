@@ -38,10 +38,12 @@ Provide a COMPREHENSIVE and EASY TO UNDERSTAND analysis.
 For all text fields, provide a Bilingual response: one in English and one in Roman Urdu (Urdu written in English script).
 
 IMPORTANT GUIDELINES:
-- DO NOT use short phrases like "N/A", "Not Applicable", or "Laagu nahi".
-- If information for a specific field is missing from the report, provide a friendly explanation like "Information not specified in this document" (EN) and "Is report mein is hawale se koi maloomat faraham nahi ki gayi" (UR).
+- If information for a specific field is strictly missing from the report (like Patient Age), provide a friendly explanation like "Information not specified in this document" (EN).
+- HOWEVER, for "doctor_questions", "dietary_advice", and "home_remedies", you MUST generate these yourself based on your analysis of the report findings to help the patient or their family, even if they are not explicitly written in the document.
+- CRITICAL: Even if the report is an autopsy or medical examiner's report for a deceased person, DO NOT say "not applicable". Instead, provide proactive health insights (e.g., preventative measures for relatives based on the findings) or general wellness tips related to the condition mentioned.
 - The summary should be BIG, easy to understand, and provide actionable context for a parent or patient.
 - Ensure the tone is supportive and professional.
+- ALWAYS include a friendly concluding note: "Always consult your doctor before making any decision." (EN) and "Koi bhi faisla karne se pehle hamesha apne doctor se mashwara karein." (UR).
 
 Return ONLY valid JSON in this exact format:
 
@@ -73,6 +75,16 @@ Return ONLY valid JSON in this exact format:
   ],
   "recommendations": [
     { "en": "", "ur": "" }
+  ],
+  "doctor_questions": [
+    { "en": "Question 1", "ur": "Sawal 1" }
+  ],
+  "dietary_advice": {
+    "foods_to_avoid": [ { "en": "", "ur": "" } ],
+    "foods_to_eat": [ { "en": "", "ur": "" } ]
+  },
+  "home_remedies": [
+    { "en": "", "ur": "" }
   ]
 }
 `;
@@ -100,9 +112,16 @@ Return ONLY valid JSON in this exact format:
             },
         });
 
-        // Strip markdown backticks if present
-        const cleanJson = result.text.replace(/^```json\n?/, "").replace(/\n?```$/, "").trim();
-        const analysis = JSON.parse(cleanJson);
+        const responseText = result.text || "";
+
+        // Robust JSON extraction: Find the first '{' and last '}'
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            console.error("AI Response was:", responseText);
+            throw new Error("AI failed to return valid JSON format");
+        }
+
+        const analysis = JSON.parse(jsonMatch[0]);
 
         // Save to Database
         const newReport = new reportModel({
