@@ -11,6 +11,9 @@ import vitalsRouter from './routes/vitalsRoutes.js';
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Trust proxy for Vercel
+app.set('trust proxy', 1);
+
 // Connect to Database
 connectDB();
 
