@@ -46,7 +46,7 @@ export default function Footer() {
             </div>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4 border-t mt-6 border-slate-200">
                 <p className="text-center">
-                    Copyright 2025 © <a href="https://prebuiltui.com?utm_source=prompt2app">PrebuiltUI</a> All Right Reserved.
+                    Copyright 2025 © <a href="https://my-portfolio-sigma-two-10.vercel.app/">Moiz Khatri</a> All Right Reserved.
                 </p>
                 <div className="flex items-center gap-4">
                     <Link to="/">
