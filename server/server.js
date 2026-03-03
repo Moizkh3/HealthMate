@@ -14,7 +14,9 @@ const port = process.env.PORT || 4000;
 // Connect to Database
 connectDB();
 
-const allowedOrigins = ['http://localhost:5173']; // Add your frontend URL here
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim().replace(/\/$/, ''))
+    : ['http://localhost:5173']
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
