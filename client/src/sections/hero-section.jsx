@@ -1,6 +1,9 @@
-import { Loader2Icon, SparklesIcon, TrendingUpIcon, UploadCloudIcon } from "lucide-react";
+import { Loader2Icon, SparklesIcon, TrendingUpIcon, UploadCloudIcon, CheckCircleIcon } from "lucide-react";
 import Marquee from "react-fast-marquee";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 
 export default function HeroSection() {
@@ -10,17 +13,60 @@ export default function HeroSection() {
     const [textIndex, setTextIndex] = useState(0);
     const [charIndex, setCharIndex] = useState(0);
     const [deleting, setDeleting] = useState(false);
+    const [file, setFile] = useState(null);
+
+    const { uploadReport, analyzeReport, isLoggedIn } = useContext(AppContext);
+    const navigate = useNavigate();
 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!isLoggedIn) {
+            toast.error("Please login to analyze reports");
+            navigate("/login");
+            return;
+        }
+
+        if (!file) {
+            toast.error("Please upload a report image first");
+            return;
+        }
+
         setLoading(true);
-        setTimeout(() => {
-            alert("Service is currently unavailable. Please try again later.");
+        try {
+            // 1. Upload to Cloudinary
+            const uploadRes = await uploadReport(file);
+            if (!uploadRes.success) throw new Error(uploadRes.message);
+
+            // 2. AI Analysis
+            const analysisRes = await analyzeReport(uploadRes.imageUrl, file.name, "General", new Date().toISOString().split('T')[0]);
+            if (!analysisRes.success) throw new Error(analysisRes.message);
+
+            toast.success("Analysis Complete!");
+
+            // 3. View Results
+            navigate("/view-report", {
+                state: {
+                    analysis: analysisRes.analysis,
+                    imageUrl: uploadRes.imageUrl,
+                    title: file.name,
+                    date: new Date().toISOString().split('T')[0],
+                    type: "General"
+                }
+            });
+        } catch (error) {
+            toast.error(error.message);
+        } finally {
             setLoading(false);
-            setPrompt("");
-            setSelected(null);
-        }, 10000);
+        }
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files[0]) {
+            setFile(e.target.files[0]);
+            toast.success("Report selected: " + e.target.files[0].name);
+        }
     };
 
     const placeholders = [
@@ -108,10 +154,18 @@ export default function HeroSection() {
                 />
 
                 <div className="flex items-center justify-between p-4 pt-0">
-                    <label htmlFor="file" className="border border-gray-200 text-gray-500 p-1.5 rounded-md cursor-pointer">
-                        <input type="file" id="file" hidden />
-                        <UploadCloudIcon className="size-4.5" />
-                    </label>
+                    <div className="flex items-center gap-3">
+                        <label htmlFor="hero-file" className="border border-gray-200 text-gray-500 p-1.5 rounded-md cursor-pointer hover:bg-gray-50 transition shadow-xs">
+                            <input type="file" id="hero-file" hidden onChange={handleFileChange} accept="image/*" />
+                            <UploadCloudIcon className="size-4.5" />
+                        </label>
+                        {file && (
+                            <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-[11px] font-medium border border-green-100">
+                                <CheckCircleIcon className="size-3" />
+                                <span className="truncate max-w-[120px]">{file.name}</span>
+                            </div>
+                        )}
+                    </div>
 
                     <button className={`flex items-center bg-linear-to-b from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 transition px-4 h-9 text-white rounded-lg ${loading ? "cursor-not-allowed opacity-80" : ""}`}>
                         {loading ? (
