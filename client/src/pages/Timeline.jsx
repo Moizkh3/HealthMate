@@ -7,6 +7,7 @@ export default function Timeline() {
     const navigate = useNavigate();
     const { reports, vitals } = useContext(AppContext);
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeFilter, setActiveFilter] = useState("all"); // all, reports, vitals
 
     // Combine and sort reports and vitals for the timeline
     const timelineData = useMemo(() => {
@@ -38,12 +39,18 @@ export default function Timeline() {
         ];
 
         return combined
-            .filter(item =>
-                item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.category.toLowerCase().includes(searchTerm.toLowerCase())
-            )
+            .filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    item.category.toLowerCase().includes(searchTerm.toLowerCase());
+
+                const matchesFilter = activeFilter === "all" ||
+                    (activeFilter === "reports" && item.type === "Report") ||
+                    (activeFilter === "vitals" && item.type === "Vital");
+
+                return matchesSearch && matchesFilter;
+            })
             .sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [reports, vitals, searchTerm]);
+    }, [reports, vitals, searchTerm, activeFilter]);
 
     return (
         <div className="flex flex-col items-center min-h-[calc(100vh-80px)] px-6 py-12 bg-gray-50 lg:px-12">
@@ -67,8 +74,8 @@ export default function Timeline() {
                 </div>
 
                 {/* Filters/Search */}
-                <div className="flex items-center gap-4 mb-10 w-full overflow-x-auto pb-2 scrollbar-hide">
-                    <div className="flex items-center bg-white border border-gray-200 h-12 rounded-full px-6 gap-3 flex-1 min-w-[280px] shadow-sm focus-within:ring-2 focus-within:ring-gray-200 transition">
+                <div className="flex flex-col md:flex-row items-center gap-4 mb-10 w-full overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex items-center bg-white border border-gray-200 h-12 rounded-full px-6 gap-3 flex-1 min-w-[280px] shadow-sm focus-within:ring-2 focus-within:ring-gray-200 transition order-2 md:order-1">
                         <SearchIcon size={18} className="text-gray-400" />
                         <input
                             type="text"
@@ -77,6 +84,18 @@ export default function Timeline() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
+                    </div>
+
+                    <div className="flex bg-white border border-gray-100 p-1 rounded-full shadow-sm order-1 md:order-2">
+                        {["all", "reports", "vitals"].map((filter) => (
+                            <button
+                                key={filter}
+                                onClick={() => setActiveFilter(filter)}
+                                className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition ${activeFilter === filter ? 'bg-linear-to-b from-gray-600 to-gray-800 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                {filter}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

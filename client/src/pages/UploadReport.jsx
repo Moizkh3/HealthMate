@@ -12,12 +12,32 @@ export default function UploadReport() {
     const [type, setType] = useState("Blood Test");
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [loading, setLoading] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
 
     const reportTypes = ["Blood Test", "MRI / X-Ray", "Prescription", "Vitals Log", "Others"];
 
     const handleFileChange = (e) => {
-        if (e.target.files[0]) {
-            setFile(e.target.files[0]);
+        const selectedFile = e.target ? e.target.files[0] : e;
+        if (selectedFile) {
+            setFile(selectedFile);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileChange(e.dataTransfer.files[0]);
         }
     };
 
@@ -65,10 +85,15 @@ export default function UploadReport() {
                     {/* File Dropzone */}
                     <div className="relative group">
                         {!file ? (
-                            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition hover:border-gray-300">
+                            <label
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition ${isDragging ? "border-gray-800 bg-gray-50 scale-[1.02]" : "border-gray-200 hover:bg-gray-50 hover:border-gray-300"}`}
+                            >
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <div className="p-3 bg-gray-100 rounded-full mb-3 group-hover:scale-110 transition">
-                                        <UploadIcon className="size-6 text-gray-600" />
+                                    <div className={`p-3 rounded-full mb-3 transition ${isDragging ? "bg-gray-800 text-white scale-110" : "bg-gray-100 text-gray-600 group-hover:scale-110"}`}>
+                                        <UploadIcon className="size-6" />
                                     </div>
                                     <p className="mb-2 text-sm text-gray-600"><span className="font-semibold">Click to upload</span> or drag and drop</p>
                                     <p className="text-xs text-gray-400">PDF, JPG or PNG (MAX. 5MB)</p>
