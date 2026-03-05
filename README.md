@@ -1,5 +1,7 @@
 # 🏥 HealthMate - AI-Powered Medical Insights & Vault
 
+![HealthMate Banner](client/public/assets/HealthMate%20thumbnail.png)
+
 HealthMate is a premium, secure medical report management and AI analysis platform. It empowers users to take control of their health data by transforming complex medical documents into actionable, bilingual insights.
 
 ---
